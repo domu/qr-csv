@@ -17,7 +17,7 @@ st.write(
     "Carica un file CSV con i tuoi indirizzi web. Scegli se esportare le singole immagini BMP "
     "oppure generare direttamente un foglio PDF A4 con i QR code impaginati esattamente a **4x4 cm**."
 )
-
+st.write("Creato da [Davide Pedretti Biagioni](https://linktr.ee/davide.pedrettibiagioni)")
 # Parametri costanti per la conversione e qualità
 DPI = 300
 CM_SIZE = 4.0
