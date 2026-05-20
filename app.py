@@ -47,6 +47,13 @@ if uploaded_file is not None:
             )
         )
         
+        # Inizializziamo i dati elaborati nello stato di Streamlit per mantenerli persistenti al click del download
+        if "file_pronto" not in st.session_state:
+            st.session_state.file_pronto = False
+            st.session_state.data_buffer = None
+            st.session_state.mime_type = ""
+            st.session_state.file_name = ""
+
         if st.button("Avvia Elaborazione"):
             urls = df[selected_column].dropna().tolist()
             
@@ -81,12 +88,10 @@ if uploaded_file is not None:
                     status_text.text("Archivio ZIP pronto per il download!")
                     zip_buffer.seek(0)
                     
-                    st.download_button(
-                        label="📥 Scarica l'archivio ZIP (BMP)",
-                        data=zip_buffer,
-                        file_name="qr_codes_bmp.zip",
-                        mime="application/zip"
-                    )
+                    st.session_state.data_buffer = zip_buffer.getvalue()
+                    st.session_state.mime_type = "application/zip"
+                    st.session_state.file_name = "qr_codes_bmp.zip"
+                    st.session_state.file_pronto = True
                 
                 # --- OPZIONE 2: GENERAZIONE UNICO FILE PDF ---
                 else:
@@ -113,17 +118,14 @@ if uploaded_file is not None:
                         qr_img = qr.make_image(fill_color="black", back_color="white").convert('1')
                         qr_resized = qr_img.resize((pixel_size, pixel_size), resample=Image.NEAREST)
                         
-                        # Per inserire l'immagine nel PDF manteniamo la massima compatibilità convertendo in PNG temporaneo
                         png_buffer = io.BytesIO()
                         qr_resized.save(png_buffer, format="PNG")
                         png_buffer.seek(0)
                         
-                        # Definiamo l'immagine per il PDF forzando le dimensioni fisiche a 4.0 x 4.0 cm
                         rl_img = RLImage(png_buffer, width=4.0*cm, height=4.0*cm)
                         pdf_images.append(rl_img)
                         progress_bar.progress(index / len(urls))
                     
-                    # Organizziamo i QR code in una griglia di 4 colonne per riga
                     grid_data = []
                     current_row = []
                     for img in pdf_images:
@@ -132,18 +134,15 @@ if uploaded_file is not None:
                             grid_data.append(current_row)
                             current_row = []
                     if current_row:
-                        # Se l'ultima riga è incompleta, aggiungiamo celle vuote per non scompaginare la tabella
                         while len(current_row) < 4:
                             current_row.append("")
                         grid_data.append(current_row)
                     
-                    # Generazione della tabella con spaziatura tra i QR Code
-                    # 4.2 cm di larghezza colonna garantisce 2 millimetri di spazio vuoto protettivo tra un QR e l'altro
                     qr_table = Table(grid_data, colWidths=[4.3*cm]*4)
                     qr_table.setStyle(TableStyle([
                         ('ALIGN', (0,0), (-1,-1), 'CENTER'),
                         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-                        ('BOTTOMPADDING', (0,0), (-1,-1), 12), # Spazio verticale tra le righe
+                        ('BOTTOMPADDING', (0,0), (-1,-1), 12), 
                         ('TOPPADDING', (0,0), (-1,-1), 12),
                     ]))
                     
@@ -153,12 +152,20 @@ if uploaded_file is not None:
                     status_text.text("Documento PDF generato con successo!")
                     pdf_buffer.seek(0)
                     
-                    st.download_button(
-                        label="📥 Scarica il documento PDF pronto per la stampa",
-                        data=pdf_buffer,
-                        file_name="catalogo_qr_4x4cm.pdf",
-                        mime="application/pdf"
-                    )
+                    st.session_state.data_buffer = pdf_buffer.getvalue()
+                    st.session_state.mime_type = "application/pdf"
+                    st.session_state.file_name = "catalogo_qr_4x4cm.pdf"
+                    st.session_state.file_pronto = True
+
+        # Il bottone di download viene mostrato FUORI dal ciclo if del pulsante per evitare che sparisca al click
+        if st.session_state.file_pronto:
+            st.write("---")
+            st.download_button(
+                label=f"📥 Scarica: {st.session_state.file_name}",
+                data=st.session_state.data_buffer,
+                file_name=st.session_state.file_name,
+                mime=st.session_state.mime_type
+            )
                     
     except Exception as e:
         st.error(f"Si è verificato un errore durante l'elaborazione: {e}")
