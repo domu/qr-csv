@@ -100,7 +100,7 @@ if uploaded_file is not None:
                     # Definiamo il documento in formato A4 con margini di 1.5 cm
                     doc = SimpleDocTemplate(
                         pdf_buffer, 
-                        pagesize=a4, 
+                        pagesize=A4, 
                         leftMargin=1.5*cm, rightMargin=1.5*cm, 
                         topMargin=1.5*cm, bottomMargin=1.5*cm
                     )
