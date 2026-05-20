@@ -6,7 +6,7 @@ import io
 import zipfile
 
 # Librerie per la creazione geometrica del PDF
-from reportlab.lib.pagesizes import a4
+from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Image as RLImage
 from reportlab.lib.units import cm
 
